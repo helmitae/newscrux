@@ -1,5 +1,6 @@
+#!/usr/bin/env node
 // src/index.ts
-import { config } from './config.js';
+import { config, runtimeConfig } from './config.js';
 import { createLogger } from './logger.js';
 import { fetchAllArticles } from './feeds.js';
 import { filterByRelevance } from './relevance.js';
@@ -19,6 +20,8 @@ import {
   countByState,
 } from './queue.js';
 import { sendNotification, sendArticleNotification } from './pushover.js';
+import { parseArgs } from './cli.js';
+import { getLanguagePack } from './i18n.js';
 import type { PollMetrics } from './types.js';
 
 const log = createLogger('main');
@@ -65,20 +68,16 @@ async function pollAndNotify(): Promise<void> {
   };
 
   try {
-    // Load queue
     loadArticleQueue();
 
-    // 1. Fetch all articles from RSS
     const allArticles = await fetchAllArticles();
 
-    // 2. Cold start check
     if (handleColdStart(allArticles)) {
       log.info('Cold start complete — no notifications this cycle');
       emitMetrics(metrics);
       return;
     }
 
-    // 3. Discover new articles (add to queue)
     const newCount = discoverArticles(allArticles);
     metrics.discovered = newCount;
     saveArticleQueue();
@@ -89,8 +88,6 @@ async function pollAndNotify(): Promise<void> {
       return;
     }
 
-    // 4. Relevance filter on discovered entries
-    //    Collect IDs of entries that passed relevance (used to gate enrichment)
     const relevancePassedIds = new Set<string>();
     const discovered = getEntriesByState('discovered');
 
@@ -101,17 +98,13 @@ async function pollAndNotify(): Promise<void> {
       metrics.relevance_passed = result.passed.length;
       metrics.relevance_dropped = result.dropped.length;
 
-      // Remove dropped entries from queue
       for (const { entry } of result.dropped) {
         removeEntry(entry.id);
       }
 
-      // Track which entries passed (only these proceed to enrichment)
       for (const entry of result.passed) relevancePassedIds.add(entry.id);
       for (const entry of result.bypassed) relevancePassedIds.add(entry.id);
 
-      // If parse error, no entries are added to relevancePassedIds,
-      // so they stay discovered and skip enrichment this cycle (retry next poll)
       if (result.parseError) {
         log.warn('Relevance parse error — skipping enrichment for affected entries this cycle');
       }
@@ -119,7 +112,6 @@ async function pollAndNotify(): Promise<void> {
       saveArticleQueue();
     }
 
-    // 5. Enrich only entries that passed relevance (limited per poll)
     const isArxiv = (name: string) => name.startsWith(config.arxivFeedPrefix);
     const eligibleForEnrich = getEntriesByState('discovered').filter(e => relevancePassedIds.has(e.id));
     const regularToEnrich = eligibleForEnrich.filter(e => !isArxiv(e.feedName));
@@ -143,7 +135,6 @@ async function pollAndNotify(): Promise<void> {
     }
     saveArticleQueue();
 
-    // 6. Summarize enriched entries
     const toSummarize = getEntriesByState('enriched');
     for (const entry of toSummarize) {
       const summary = await summarizeEntry(entry);
@@ -154,12 +145,10 @@ async function pollAndNotify(): Promise<void> {
         markFailed(entry.id, 'Summarization failed');
         metrics.summary_failed++;
       }
-      // Rate limit between API calls
       await new Promise(resolve => setTimeout(resolve, 2000));
     }
     saveArticleQueue();
 
-    // 7. Send summarized entries
     const toSend = getEntriesByState('summarized');
     for (const entry of toSend) {
       if (!entry.structuredSummary) {
@@ -178,12 +167,10 @@ async function pollAndNotify(): Promise<void> {
         metrics.send_failed++;
       }
 
-      // Rate limit between notifications
       await new Promise(resolve => setTimeout(resolve, 1000));
     }
     saveArticleQueue();
 
-    // 8. Emit metrics
     const counts = countByState();
     metrics.queue_pending = counts.discovered + counts.enriched + counts.summarized;
     metrics.queue_failed = counts.failed;
@@ -192,7 +179,7 @@ async function pollAndNotify(): Promise<void> {
     log.info(`Poll cycle complete: ${metrics.sent} sent, ${metrics.queue_pending} pending`);
   } catch (err) {
     log.error('Error in poll cycle', err);
-    saveArticleQueue(); // Save any partial progress
+    saveArticleQueue();
   }
 }
 
@@ -216,14 +203,18 @@ function setupShutdown(): void {
 }
 
 async function main(): Promise<void> {
-  log.info('RSSfeedy-Pi v2.0 starting...');
+  // Parse CLI args before anything else
+  const args = parseArgs();
+  runtimeConfig.language = args.lang;
+
+  const pack = getLanguagePack(runtimeConfig.language);
+  log.info(`Newscrux v2.0 starting... (language: ${pack.name})`);
   validateConfig();
   setupShutdown();
 
-  // Startup notification
   const startupSent = await sendNotification(
-    '🚀 RSSfeedy-Pi',
-    'RSSfeedy-Pi v2.0 başlatıldı! Yapılandırılmış AI haber bildirimleri aktif.',
+    '📡 Newscrux',
+    pack.labels.startupMessage,
   );
 
   if (startupSent) {
@@ -232,10 +223,7 @@ async function main(): Promise<void> {
     log.error('Failed to send startup notification — check Pushover credentials');
   }
 
-  // Run first poll immediately
   await pollAndNotify();
-
-  // Schedule recurring polls
   scheduleNextPoll();
 }
 
