@@ -8,7 +8,7 @@ import type { Article, FeedConfig } from './types.js';
 const log = createLogger('feeds');
 const parser = new Parser({
   timeout: 10000,
-  headers: { 'User-Agent': 'RSSfeedy-Pi/2.0' },
+  headers: { 'User-Agent': 'Newscrux/2.0' },
 });
 
 const SNIPPET_MAX_CHARS = 1500;
